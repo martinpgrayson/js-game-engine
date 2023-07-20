@@ -1,0 +1,100 @@
+<html><body>
+    <div>
+        <canvas id="canvas"></canvas>
+    </div>
+    <script src="../../../src/v1/core.js"></script>
+    <script src="../../../src/v1/uicanvas.js"></script>
+    <script src="../../../src/v1/game.js"></script>    
+    <script>
+        
+    // Sprite URLS
+    var steveSprite = "../../images/click-adventure/steve.png";
+    var targetSprite = "../../images/click-adventure/target.png";
+    var alexSprite = "../../images/click-adventure/alex.png";
+    var skeletonSprite = "../../images/click-adventure/skeleton.png";
+    var diamondSprite = "../../images/click-adventure/diamond.png";
+    var holeSprite = "../../images/click-adventure/hole.png";
+    var goalSprite = "../../images/click-adventure/goal.png";
+
+    var scene = new GameScene();
+    var player = new ForegroundSprite(scene, steveSprite, 0, 0);
+    
+    var diamonds = new List();
+    for (var i = 0; i < 10; i++) {
+        var diamond = new ForegroundSprite(scene, diamondSprite, getRandom(canvas.width), getRandom(canvas.height));
+        diamonds.add(diamond);            
+    }
+
+    var goal = new BackgroundSprite(scene, goalSprite, canvas.width, canvas.height);
+
+    var holes = new List();
+    for (i = 0; i < 20; i++) {
+        var hole = new BackgroundSprite(scene, holeSprite, getRandom(canvas.width), getRandom(canvas.height), getRandom(50, 120));
+        holes.add(hole);            
+    }
+
+    var target = new BackgroundSprite(scene, targetSprite, 0, 0);
+    var mouse = new Mouse(canvas);
+
+    var enemy = new ForegroundSprite(scene, skeletonSprite, canvas.width, canvas.height);
+    
+    var playerSpeed = 50;
+    var enemySpeed = 40;
+    
+    var score = 0;
+    var isDead = false;
+    var hasWon = false;
+    function update(progress) {
+        if (isDead || hasWon) {
+            return;
+        }
+
+        if (mouse.isDown) {
+            target.place(mouse.x, mouse.y);
+        }
+
+        player.move(target.x, target.y, playerSpeed * progress);
+        
+        for (var i = 0; i < diamonds.count(); i++) {
+            var diamond = diamonds.itemAt(i);
+            if (diamond.isActive && player.contains(diamond.getCenter())) {
+                diamond.isActive = false;
+                score++;
+            }
+        }
+
+        for (var i = 0; i < holes.count(); i++) {
+            var hole = holes.itemAt(i);
+            if (hole.contains(player.getBottomCenter())) {
+                isDead = true;
+            }
+        }
+
+        enemy.move(target.x, target.y, enemySpeed * progress);
+        if (enemy.contains(player.getCenter())) {
+            isDead = true;
+        }
+
+        if (score == diamonds.count() && goal.contains(player.getCenter())) {
+            hasWon = true;
+        }
+    }
+
+    function draw(context) {
+        scene.clear(context, "forestgreen");
+        scene.drawSprites(context);
+        scene.drawTopText(context, "Score: " + score);
+
+        if (isDead) {
+            scene.drawCenterText(context, "DEAD!");
+        }
+
+        if (hasWon) {
+            scene.drawCenterText(context, "WIN!!");
+        }
+    }
+
+    </script>
+</body>
+
+</html>
